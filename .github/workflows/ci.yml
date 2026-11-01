@@ -81,6 +81,9 @@ jobs:
         with:
           image-ref: auth-course:ci
           severity: CRITICAL,HIGH
+          # Fail only on problems that have a fix. Findings with no patch yet, such as
+          # unfixed Debian library issues, cannot be solved here and would keep CI red.
+          ignore-unfixed: true
           exit-code: "1"
 
   saml:
