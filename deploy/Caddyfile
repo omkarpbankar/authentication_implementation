@@ -1,0 +1,27 @@
+# "tls internal" uses a private certificate, for local practice. Real sites use a public one.
+{
+    auto_https disable_redirects
+}
+
+https://localhost:8443 {
+    tls internal
+
+    # Metrics stay private. This proxy does not forward them.
+    @private path /metrics
+    respond @private 404
+
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    reverse_proxy access-1:8010 access-2:8010 {
+        lb_policy round_robin
+        # If an instance has just died, remember that and retry the request on the other one.
+        # Retries only change the outcome with fail_duration set, or they repeat the same choice.
+        lb_try_duration 3s
+        lb_try_interval 100ms
+        fail_duration 30s
+        max_fails 1
+        # A failed instance stops receiving traffic automatically.
+        health_uri /health/ready
+        health_interval 5s
+    }
+}

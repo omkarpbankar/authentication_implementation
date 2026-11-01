@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Access requests</h1>
+<table>
+  <tr><th>User</th><th>Application</th><th>Note</th><th>Decision</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.email }}</td>
+    <td>{{ row.application }}</td>
+    <td>{{ row.note }}</td>
+    <td>
+      <form class="inline" method="post" action="/requests/{{ row.id }}/approve">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <select name="tier">
+          {% for option in tiers %}<option value="{{ option }}" {% if option == row.requested_tier %}selected{% endif %}>{{ option|title }}</option>{% endfor %}
+        </select>
+        <input name="reason" placeholder="Reason" required minlength="3">
+        <button>Approve</button>
+      </form>
+      <form class="inline" method="post" action="/requests/{{ row.id }}/reject">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <input name="reason" placeholder="Reason" required minlength="3">
+        <button>Reject</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">No pending requests.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

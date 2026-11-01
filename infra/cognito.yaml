@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Authentication course, App 4. Delete this stack when you finish the lab.
+
+Parameters:
+  DomainPrefix:
+    Type: String
+    Description: A globally unique prefix for the login domain, such as app4-yourname.
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: auth-course-app4
+      # Essentials has a free tier and supports access token customization. Plus does not.
+      UserPoolTier: ESSENTIALS
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      MfaConfiguration: "OFF"
+      DeletionProtection: INACTIVE
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+      LambdaConfig:
+        PreTokenGenerationConfig:
+          LambdaArn: !GetAtt PreTokenFunction.Arn
+          LambdaVersion: V2_0
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref DomainPrefix
+      UserPoolId: !Ref UserPool
+      ManagedLoginVersion: 2
+
+  WebClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: app4-web
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs: ["http://localhost:8004/callback"]
+      LogoutURLs: ["http://localhost:8004/"]
+      SupportedIdentityProviders: [COGNITO]
+      ExplicitAuthFlows: [ALLOW_USER_PASSWORD_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      PreventUserExistenceErrors: ENABLED
+
+  OrdersResourceServer:
+    Type: AWS::Cognito::UserPoolResourceServer
+    Properties:
+      UserPoolId: !Ref UserPool
+      Identifier: orders
+      Name: Orders API
+      Scopes:
+        - ScopeName: read
+          ScopeDescription: Read orders
+
+  MachineClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: OrdersResourceServer
+    Properties:
+      ClientName: app4-m2m
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [client_credentials]
+      AllowedOAuthScopes: [orders/read]
+      SupportedIdentityProviders: [COGNITO]
+
+  MemberGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: member
+      UserPoolId: !Ref UserPool
+
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref UserPool
+
+  PreTokenRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  PreTokenFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt PreTokenRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              groups = event["request"]["groupConfiguration"].get("groupsToOverride") or []
+              plan = "premium" if "admin" in groups else "basic"
+              event["response"] = {
+                  "claimsAndScopeOverrideDetails": {
+                      "idTokenGeneration": {"claimsToAddOrOverride": {"plan": plan}},
+                      "accessTokenGeneration": {"claimsToAddOrOverride": {"plan": plan}},
+                  }
+              }
+              return event
+
+  PreTokenPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PreTokenFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+
+Outputs:
+  UserPoolId:
+    Value: !Ref UserPool
+  WebClientId:
+    Value: !Ref WebClient
+  MachineClientId:
+    Value: !Ref MachineClient
+  Domain:
+    Value: !Sub "https://${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com"

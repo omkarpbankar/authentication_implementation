@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Bulk changes</h1>
+<p>Paste CSV with the columns <code>email,app_key,tier</code>. You see a preview first, and any error stops the whole change.</p>
+<form method="post" action="/bulk/preview">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <textarea name="csv_text" rows="8" required>{{ csv_text or "email,app_key,tier\n" }}</textarea>
+  <button>Preview</button>
+</form>
+
+{% if preview %}
+<h2>Preview</h2>
+<table>
+  <tr><th>Line</th><th>Email</th><th>Application</th><th>Tier</th><th>Result</th></tr>
+  {% for row in preview.rows %}
+  <tr>
+    <td>{{ row.line }}</td><td>{{ row.email }}</td><td>{{ row.app_key }}</td><td>{{ row.tier }}</td>
+    <td>{% if row.error %}<span class="bad">{{ row.error }}</span>{% else %}{{ row.change }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% if preview.errors == 0 %}
+<form class="inline" method="post" action="/bulk/apply">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <input type="hidden" name="csv_text" value="{{ csv_text }}">
+  <input name="reason" placeholder="Reason" required minlength="3">
+  <button>Apply these changes</button>
+</form>
+{% else %}
+<p class="bad">Fix {{ preview.errors }} error(s) before applying.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Audit log</h1>
+<form class="inline" method="get" action="/audit">
+  <input name="reference" value="{{ reference }}" placeholder="Reference ID from a denied page">
+  <button>Find</button>
+</form>
+<table>
+  <tr><th>When</th><th>Action</th><th>Target</th><th>Reason</th><th>Reference</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.at }}</td><td>{{ row.action }}</td><td>{{ row.target }}</td>
+    <td>{{ row.reason }}</td><td>{{ row.reference_id }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">Nothing found.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

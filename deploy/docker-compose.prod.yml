@@ -1,0 +1,41 @@
+# A production-style setup, for practice: two Access Service instances behind a TLS proxy.
+#
+# Run:  docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml --profile prod up -d --build
+# Test: curl -k https://localhost:8443/health/ready
+#
+# This proves TLS, proxying, non-root containers, and two instances. Sign-in inside containers
+# needs a real hostname for Keycloak, because its issuer URL must match from every network.
+services:
+  access-1: &access
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      APP8_DATABASE_URL: postgresql+asyncpg://access_app:access-app-dev-password@postgres:5432/access
+      APP8_REDIS_URL: redis://redis:6379/8
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  access-2: *access
+
+  proxy:
+    profiles: ["prod"]
+    image: caddy:2.11.7-alpine
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - access-1
+      - access-2

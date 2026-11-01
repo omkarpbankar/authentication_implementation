@@ -1,0 +1,76 @@
+[project]
+name = "authentication-journey"
+version = "0.1.0"
+description = "Hands-on course covering authentication and authorization with FastAPI"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.20.1",
+    "asyncpg>=0.32.0",
+    "authlib>=1.9.1",
+    "boto3>=1.43.123",
+    "casbin>=1.43.0",
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "jinja2>=3.1.6",
+    "msal>=1.39.0",
+    "prometheus-client>=0.26.0",
+    "pwdlib[argon2]>=0.3.1",
+    "pydantic-settings>=2.16.2",
+    "pyjwt[crypto]>=2.15.1",
+    "pyotp>=2.10.0",
+    "python-multipart>=0.0.33",
+    "redis>=8.1.0",
+    "segno>=1.6.6",
+    "slowapi>=0.1.10",
+    "sqlalchemy[asyncio]>=2.1.6",
+    "structlog>=26.1.0",
+    "uvicorn[standard]>=0.54.0",
+    "webauthn>=3.0.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "S", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use assert and fake passwords on purpose.
+"tests/**" = ["S101", "S105", "S106", "S107"]
+# Lab accounts are public demo values, printed in the lesson.
+"apps/phase1_fundamentals/**" = ["S105", "S106"]
+# SAML documents are long single lines, and the skip must run before the imports.
+"tests/app6_saml/**" = ["S101", "S105", "S106", "S107", "E501", "E402"]
+# Live check scripts talk to local practice servers with public seed accounts.
+"scripts/**" = ["S101", "S105", "S106", "S603", "S607", "S608"]
+# Only constants from the same file are placed into this SQL.
+"apps/app8_access/access_service/admin.py" = ["S608"]
+"apps/app8_access/access_service/migrations/**" = ["S608"]
+# Migrations build SQL from constants in the same file, never from user input.
+"apps/app7_platform/migrations/**" = ["S608"]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "cbor2>=6.2.0.post1",
+    "cfn-lint>=1.59.0",
+    "fakeredis>=2.40.0",
+    "freezegun>=1.5.5",
+    "httpx2>=2.16.0",
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
+    "respx>=0.23.1",
+    "ruff>=0.17.3",
+]

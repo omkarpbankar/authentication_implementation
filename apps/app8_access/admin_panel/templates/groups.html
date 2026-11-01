@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Groups</h1>
+<form class="inline" method="post" action="/groups">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <input name="name" placeholder="New group name" required>
+  <button>Create group</button>
+</form>
+
+{% for group in rows %}
+<h2>{{ group.name }}</h2>
+<table>
+  <tr><th>Member</th><th></th></tr>
+  {% for member in group.members %}
+  <tr>
+    <td>{{ member.email }}</td>
+    <td>
+      <form method="post" action="/groups/{{ group.id }}/members/{{ member.id }}/remove">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button>Remove</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="2">No members yet.</td></tr>
+  {% endfor %}
+</table>
+<p>Grants: {% for grant in group.grants %}<span class="tag">{{ grant.app_key }}: {{ grant.tier }}</span> {% else %}None{% endfor %}</p>
+<form class="inline" method="post" action="/groups/{{ group.id }}/members">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <select name="user_id">{% for person in people %}<option value="{{ person.id }}">{{ person.email }}</option>{% endfor %}</select>
+  <button>Add member</button>
+</form>
+<form class="inline" method="post" action="/groups/{{ group.id }}/grant">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <select name="application_id">{% for app in applications %}<option value="{{ app.id }}">{{ app.name }}</option>{% endfor %}</select>
+  <select name="tier">{% for option in tiers %}<option value="{{ option }}">{{ option|title }}</option>{% endfor %}</select>
+  <input name="reason" placeholder="Reason" required minlength="3">
+  <button>Set group access</button>
+</form>
+{% endfor %}
+{% endblock %}

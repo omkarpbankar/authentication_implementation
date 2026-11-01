@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin Panel{% endblock %}</title>
+  <style>
+    :root { color-scheme: light dark; --line: #8884; --accent: #2563eb; }
+    body { font-family: system-ui, sans-serif; margin: 0; line-height: 1.5; }
+    nav { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    nav a { text-decoration: none; }
+    nav .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    main { max-width: 1040px; margin: 0 auto; padding: 16px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    form.inline { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0; }
+    input, select, textarea, button { font: inherit; padding: 4px 8px; }
+    button { cursor: pointer; }
+    .stats { display: flex; flex-wrap: wrap; gap: 16px; }
+    .stat { border: 1px solid var(--line); border-radius: 8px; padding: 12px 20px; }
+    .stat b { display: block; font-size: 1.6em; }
+    .tag { border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; font-size: .85em; }
+    .bad { color: #dc2626; }
+    textarea { width: 100%; }
+  </style>
+</head>
+<body>
+  {% if session %}
+  <nav>
+    <a href="/">Dashboard</a>
+    <a href="/users">Users</a>
+    <a href="/matrix">Access matrix</a>
+    <a href="/applications">Applications</a>
+    <a href="/groups">Groups</a>
+    <a href="/requests">Requests</a>
+    <a href="/bulk">Bulk changes</a>
+    <a href="/reviews">Access reviews</a>
+    {% if "audit" in session.actions %}<a href="/audit">Audit log</a>{% endif %}
+    {% if "manage_admins" in session.actions %}<a href="/admins">Admins</a>{% endif %}
+    <span class="right">
+      <span class="tag">{{ session.role }}</span> {{ session.email }}
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button>Sign out</button>
+      </form>
+    </span>
+  </nav>
+  {% endif %}
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

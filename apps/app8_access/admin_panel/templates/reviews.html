@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Access reviews</h1>
+<p>Confirm access people still need. To remove it, open the user.</p>
+<table>
+  <tr><th>User</th><th>Application</th><th>Tier</th><th>Last reviewed</th><th>Last seen</th><th></th></tr>
+  {% for row in rows %}
+  <tr>
+    <td><a href="/users/{{ row.user_id }}">{{ row.email }}</a></td>
+    <td>{{ row.application }}</td>
+    <td>{{ row.tier|title }}</td>
+    <td>{{ row.reviewed_at or "Never" }}</td>
+    <td>{{ row.last_seen_at or "Never" }}{% if row.inactive %} <span class="tag bad">inactive</span>{% endif %}</td>
+    <td>
+      <form method="post" action="/reviews/{{ row.id }}/confirm">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button>Confirm</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">Nothing to review.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

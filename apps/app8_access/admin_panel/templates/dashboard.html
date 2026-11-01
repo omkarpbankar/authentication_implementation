@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="stats">
+  <div class="stat"><b>{{ data.live_grants }}</b> live grants</div>
+  <div class="stat"><b>{{ data.open_requests }}</b> pending requests</div>
+  <div class="stat"><b>{{ data.expiring_soon }}</b> expiring in 7 days</div>
+</div>
+<h2>Recent changes</h2>
+<table>
+  <tr><th>When</th><th>Action</th><th>Target</th><th>Reason</th></tr>
+  {% for row in data.recent %}
+  <tr><td>{{ row.at }}</td><td>{{ row.action }}</td><td>{{ row.target }}</td><td>{{ row.reason }}</td></tr>
+  {% else %}
+  <tr><td colspan="4">Nothing yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

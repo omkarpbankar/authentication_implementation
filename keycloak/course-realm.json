@@ -1,0 +1,605 @@
+{
+  "realm": "course",
+  "enabled": true,
+  "displayName": "Authentication Course",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 1,
+  "roles": {
+    "realm": [
+      {
+        "name": "reader"
+      },
+      {
+        "name": "writer"
+      },
+      {
+        "name": "default-roles-course",
+        "composite": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "app2-web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "app2-web-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8002/*",
+        "http://localhost:8012/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8002",
+        "http://localhost:8012"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8002/*##http://localhost:8012/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-app2-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "app2-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "app2-worker",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "app2-worker-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-app2-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "app2-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "app2-cli",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-app2-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "app2-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "app5-social",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "app5-social-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8005/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8005"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8005/*"
+      },
+      "protocolMappers": []
+    },
+    {
+      "clientId": "app6-oidc",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "app6-oidc-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8006/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8006"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8006/*",
+        "backchannel.logout.url": "http://host.docker.internal:8006/backchannel-logout",
+        "backchannel.logout.session.required": "true"
+      },
+      "protocolMappers": [],
+      "frontchannelLogout": false
+    },
+    {
+      "clientId": "http://localhost:8007/saml/metadata",
+      "name": "app6-saml",
+      "enabled": true,
+      "protocol": "saml",
+      "defaultClientScopes": [
+        "saml_organization"
+      ],
+      "redirectUris": [
+        "http://localhost:8007/*"
+      ],
+      "frontchannelLogout": true,
+      "attributes": {
+        "saml.assertion.signature": "true",
+        "saml.server.signature": "true",
+        "saml.signature.algorithm": "RSA_SHA256",
+        "saml.client.signature": "false",
+        "saml.authnstatement": "true",
+        "saml_name_id_format": "persistent",
+        "saml_force_name_id_format": "true",
+        "saml_assertion_consumer_url_post": "http://localhost:8007/saml/acs",
+        "saml_single_logout_service_url_redirect": "http://localhost:8007/saml/sls"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "config": {
+            "user.attribute": "email",
+            "attribute.name": "email",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "roles",
+          "protocol": "saml",
+          "protocolMapper": "saml-role-list-mapper",
+          "config": {
+            "single": "true",
+            "attribute.name": "roles",
+            "attribute.nameformat": "Basic"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "app7-tester",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "app7-tester-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocolMappers": [
+        {
+          "name": "audience-app7-platform",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "app7-platform",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "organization"
+      ]
+    },
+    {
+      "clientId": "notes-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "notes-app-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8012/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8012"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8012/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-notes-app",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "notes-app",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "audience-access-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "access-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "organization"
+      ]
+    },
+    {
+      "clientId": "reports-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "reports-app-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8013/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8013"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8013/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-reports-app",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "reports-app",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "audience-access-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "access-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "organization"
+      ]
+    },
+    {
+      "clientId": "files-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "files-app-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8014/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8014"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8014/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-files-app",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "files-app",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "audience-access-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "access-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "organization"
+      ]
+    },
+    {
+      "clientId": "admin-panel",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "admin-panel-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8011/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8011"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8011/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-admin-panel",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "admin-panel",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "audience-access-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "access-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "true"
+          }
+        }
+      ],
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "organization"
+      ]
+    }
+  ],
+  "organizationsEnabled": true,
+  "organizations": [
+    {
+      "name": "Acme",
+      "alias": "acme",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "acme.example",
+          "verified": true
+        }
+      ],
+      "members": [
+        {
+          "username": "asha",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "meera",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "neel",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "vik",
+          "membershipType": "MANAGED"
+        }
+      ]
+    },
+    {
+      "name": "Globex",
+      "alias": "globex",
+      "enabled": true,
+      "domains": [
+        {
+          "name": "globex.example",
+          "verified": true
+        }
+      ],
+      "members": [
+        {
+          "username": "ravi",
+          "membershipType": "MANAGED"
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "asha",
+      "email": "asha@acme.example",
+      "emailVerified": true,
+      "firstName": "Asha",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course",
+        "reader",
+        "writer"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "ravi",
+      "email": "ravi@globex.example",
+      "emailVerified": true,
+      "firstName": "Ravi",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course",
+        "reader"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "meera",
+      "email": "meera@acme.example",
+      "emailVerified": true,
+      "firstName": "Meera",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "practice",
+          "secretData": "{\"value\": \"course-admin-practice-totp-secret\"}",
+          "credentialData": "{\"subType\": \"totp\", \"digits\": 6, \"counter\": 0, \"period\": 30, \"algorithm\": \"HmacSHA1\"}"
+        }
+      ]
+    },
+    {
+      "username": "vik",
+      "email": "vik@acme.example",
+      "emailVerified": true,
+      "firstName": "Vik",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "neel",
+      "email": "neel@acme.example",
+      "emailVerified": true,
+      "firstName": "Neel",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "neha",
+      "email": "asha@acme.example.unverified",
+      "emailVerified": false,
+      "firstName": "Neha",
+      "lastName": "Tester",
+      "enabled": true,
+      "realmRoles": [
+        "default-roles-course"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "correct-horse-battery",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

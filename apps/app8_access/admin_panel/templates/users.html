@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Users</h1>
+<form class="inline" method="get" action="/users">
+  <input name="q" value="{{ q }}" placeholder="Search email or name">
+  <input name="app_key" value="{{ app_key }}" placeholder="Application, such as notes">
+  <select name="tier">
+    <option value="">Any tier</option>
+    {% for option in tiers %}<option value="{{ option }}" {% if option == tier %}selected{% endif %}>{{ option|title }}</option>{% endfor %}
+  </select>
+  <button>Filter</button>
+</form>
+<table>
+  <tr><th>Email</th><th>Name</th><th>Status</th><th>Last seen</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td><a href="/users/{{ row.id }}">{{ row.email or "(erased)" }}</a></td>
+    <td>{{ row.name }}</td>
+    <td>{{ row.status }}</td>
+    <td>{{ row.last_seen_at or "Never" }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">No users found.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

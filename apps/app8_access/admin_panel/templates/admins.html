@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admins</h1>
+<table>
+  <tr><th>Email</th><th>Role</th><th></th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.email }}</td>
+    <td>{{ row.role }}</td>
+    <td>
+      <form class="inline" method="post" action="/admins/{{ row.user_id }}/remove">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <input name="reason" placeholder="Reason" required minlength="3">
+        <button>Remove</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<h2>Add or change an admin</h2>
+<form class="inline" method="post" action="/admins">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <select name="user_id">{% for person in people %}<option value="{{ person.id }}">{{ person.email }}</option>{% endfor %}</select>
+  <select name="role">
+    <option value="app_admin">App Admin</option>
+    <option value="helpdesk">Helpdesk</option>
+    <option value="auditor">Auditor</option>
+    <option value="super_admin">Super Admin</option>
+  </select>
+  <select name="application_id" aria-label="Application, for App Admins">
+    <option value="">No application</option>
+    {% for app in applications %}<option value="{{ app.id }}">{{ app.name }}</option>{% endfor %}
+  </select>
+  <input name="reason" placeholder="Reason" required minlength="3">
+  <button>Save</button>
+</form>
+{% endblock %}

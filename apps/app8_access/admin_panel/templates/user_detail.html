@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ data.user.email or "(erased)" }}</h1>
+<p>{{ data.user.name }} <span class="tag">{{ data.user.status }}</span></p>
+
+<h2>Application access</h2>
+<table>
+  <tr><th>Application</th><th>Tier</th><th>Status</th><th>Expires</th><th>Change</th></tr>
+  {% for app in data.applications %}
+  <tr>
+    <td>{{ app.name }}</td>
+    <td>{{ (app.tier or "No access")|title }}</td>
+    <td>{{ app.status or "-" }}</td>
+    <td>{{ app.expires_at or "Never" }}</td>
+    <td>
+      <form class="inline" method="post" action="/users/{{ data.user.id }}/grant">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}-{{ loop.index }}">
+        <input type="hidden" name="application_id" value="{{ app.id }}">
+        <input type="hidden" name="expected_version" value="{{ app.version or '' }}">
+        <select name="tier">
+          {% for option in tiers %}<option value="{{ option }}" {% if option == app.tier %}selected{% endif %}>{{ option|title }}</option>{% endfor %}
+        </select>
+        <input type="datetime-local" name="expires_at" aria-label="Expires">
+        <input name="reason" placeholder="Reason" required minlength="3">
+        <button>Save</button>
+      </form>
+      {% if app.grant_id %}
+      <form class="inline" method="post" action="/users/{{ data.user.id }}/grant-action">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <input type="hidden" name="application_id" value="{{ app.id }}">
+        <input name="reason" placeholder="Reason" required minlength="3">
+        {% if app.status == "suspended" %}
+        <button name="action" value="resume">Resume</button>
+        {% else %}
+        <button name="action" value="suspend">Suspend</button>
+        {% endif %}
+        <button name="action" value="revoke">Revoke</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if "manage_admins" in session.actions and data.user.status == "active" %}
+<h2>Account</h2>
+<form class="inline" method="post" action="/users/{{ data.user.id }}/disable">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <input name="reason" placeholder="Reason" required minlength="3">
+  <button class="bad">Disable this user</button>
+</form>
+{% endif %}
+
+<h2>History</h2>
+<table>
+  <tr><th>When</th><th>Action</th><th>Reason</th></tr>
+  {% for row in data.history %}
+  <tr><td>{{ row.at }}</td><td>{{ row.action }}</td><td>{{ row.reason }}</td></tr>
+  {% else %}
+  <tr><td colspan="3">No history yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

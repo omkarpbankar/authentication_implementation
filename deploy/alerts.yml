@@ -1,0 +1,33 @@
+# Prometheus alert rules. These are examples to adapt, and are not running in this course.
+groups:
+  - name: authentication
+    rules:
+      - alert: DenialSpike
+        expr: sum(rate(access_denials_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Many access denials. A misconfiguration or an attack may be under way.
+
+      - alert: AccessServiceDown
+        expr: up{job="access-service"} == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: An Access Service instance is down. Apps fail closed if all of them are.
+
+      - alert: RefreshTokenReuse
+        expr: increase(refresh_reuse_total[10m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: A used refresh token came back, which can mean a stolen token.
+
+      - alert: NewSuperAdmin
+        expr: increase(admin_assigned_total{role="super_admin"}[10m]) > 0
+        labels:
+          severity: page
+        annotations:
+          summary: A Super Admin was added. Confirm that this was expected.

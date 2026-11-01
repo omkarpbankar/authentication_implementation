@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Access matrix</h1>
+<p>Open a user to change their access.</p>
+<table>
+  <tr>
+    <th>User</th>
+    {% for app in data.applications %}<th>{{ app.name }}</th>{% endfor %}
+  </tr>
+  {% for user in data.users %}
+  <tr>
+    <td><a href="/users/{{ user.id }}">{{ user.email }}</a></td>
+    {% for app in data.applications %}
+    {% set grant = user.grants[app.app_key] %}
+    <td>
+      {% if grant %}{{ grant.tier|title }}{% if grant.status != "active" %} <span class="tag">{{ grant.status }}</span>{% endif %}{% else %}-{% endif %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

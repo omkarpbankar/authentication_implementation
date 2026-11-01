@@ -1,0 +1,78 @@
+# Local services for the course. Ports bind to 127.0.0.1, so nothing is exposed to your network.
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?run scripts/bootstrap_env.py first}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/bootstrap_env.py first}
+      POSTGRES_DB: ${POSTGRES_DB:?run scripts/bootstrap_env.py first}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8.8.4-alpine
+    ports:
+      # 6380 on your machine, because 6379 is already used by something in WSL.
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?run scripts/bootstrap_env.py first}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?run scripts/bootstrap_env.py first}
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      # The Keycloak image has no curl, so this talks to the health port using bash.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '200 OK' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Catches every email sent during the course, so nothing reaches a real inbox.
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+  # Started only when asked for, with: docker compose --profile saml up -d --build saml-app
+  saml-app:
+    profiles: ["saml"]
+    build:
+      context: .
+      dockerfile: apps/app6_sso/saml_app/Dockerfile
+    environment:
+      IDP_DESCRIPTOR_URL: http://keycloak:8080/realms/course/protocol/saml/descriptor
+    ports:
+      - "127.0.0.1:8007:8007"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  keycloak_data:

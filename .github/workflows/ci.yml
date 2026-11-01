@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11-alpine
+        env:
+          POSTGRES_USER: auth_dev
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: auth_dev
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U auth_dev"
+          --health-interval 5s
+          --health-retries 10
+      redis:
+        image: redis:8.8.4-alpine
+        ports:
+          - 6380:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan history for leaked secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Check style
+        run: |
+          uv run ruff format --check .
+          uv run ruff check .
+
+      - name: Security lint
+        run: uv run bandit -q -ll -ii -r apps -x apps/app7_platform/migrations,apps/app8_access/access_service/migrations
+
+      - name: Audit dependencies
+        run: uv run pip-audit
+
+      - name: Prepare test databases
+        env:
+          PGPASSWORD: ci-only-password
+        run: |
+          sudo apt-get install -y postgresql-client
+          psql -h localhost -p 5433 -U auth_dev -d auth_dev -f deploy/ci-databases.sql
+          APP7_MIGRATION_DATABASE=platform_test uv run alembic -c apps/app7_platform/alembic.ini upgrade head
+          APP8_MIGRATION_DATABASE=access_test uv run alembic -c apps/app8_access/access_service/alembic.ini upgrade head
+          uv run python scripts/seed_access_test.py
+
+      - name: Run tests
+        run: uv run pytest -q
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -f deploy/Dockerfile -t auth-course:ci .
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: auth-course:ci
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+  saml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the SAML image
+        run: docker build -f apps/app6_sso/saml_app/Dockerfile -t saml-app:ci .
+
+      - name: Run the SAML attack lab
+        run: docker run --rm saml-app:ci pytest tests/app6_saml -q

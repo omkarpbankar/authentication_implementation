@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Applications</h1>
+{% for app in rows %}
+<h2>{{ app.name }} <span class="tag">{{ app.status }}</span></h2>
+<p>Application ID: <code>{{ app.id }}</code></p>
+<p>Client IDs: {% for client in app.clients %}<code>{{ client.client_id }}</code> ({{ client.environment }}) {% endfor %}</p>
+<table>
+  <tr><th>Tier</th><th>Rank</th><th>Current holders</th></tr>
+  {% for tier in app.tiers %}
+  <tr><td>{{ tier.key|title }}</td><td>{{ tier.rank }}</td><td>{{ tier.holders }}</td></tr>
+  {% endfor %}
+</table>
+{% if "manage_apps" in session.actions %}
+<form class="inline" method="post" action="/applications/{{ app.id }}/status">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <select name="new_status">
+    {% for option in ["active", "maintenance", "retired"] %}<option {% if option == app.status %}selected{% endif %}>{{ option }}</option>{% endfor %}
+  </select>
+  <input name="reason" placeholder="Reason" required minlength="3">
+  <button>Change status</button>
+</form>
+{% endif %}
+{% endfor %}
+{% endblock %}
