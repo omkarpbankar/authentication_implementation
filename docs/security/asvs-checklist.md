@@ -46,5 +46,6 @@ This maps the project to the themes of **OWASP ASVS Level 2** and the **OWASP AP
 2. Use a real secret manager, instead of `.env` and practice defaults.
 3. Serve everything over HTTPS, set `Secure` cookies, and enable HSTS on the apps.
 4. Run the apps with real Keycloak hostnames, which the local container test does not cover.
-5. Add alert delivery, since `deploy/alerts.yml` holds example rules only.
-6. Commission an independent penetration test.
+5. Review the container image's unpatched operating-system findings. CI ignores findings with no fix available, so check the Trivy report from time to time, and rebuild the image when Debian publishes patches.
+6. Add alert delivery, since `deploy/alerts.yml` holds example rules only.
+7. Commission an independent penetration test.
